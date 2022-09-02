@@ -2,19 +2,19 @@ version: "2.0"
 
 # Define the services/containers to be run
 services:
-  koa-auth-api: #name of your service
-    build: . # specify the directory of the Dockerfile
+  koa-auth-api: # Main API service
+    build: . # Directory of dockerfile
     restart: always
     ports:
-      - "3000:3000" #specify ports forwarding
+      - "3000:3000" # Forward required port
     links:
-      - database # link this service to the database service
+      - database # Link this service to the database service
     volumes:
       - .:/app
     depends_on:
       - database
-  database: # name of the service
-    image: mongo # specify image to build container from
+  database: # Database service
+    image: mongo # Specify image to build container from
     ports:
       - "27017:27017"
     volumes:

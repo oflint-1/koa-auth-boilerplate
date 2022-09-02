@@ -1,3 +1,4 @@
+// Imports
 const User = require("../models/user");
 const passport = require("koa-passport");
 const bcrypt = require("bcryptjs");
@@ -15,64 +16,70 @@ async function login(ctx) {
   })(ctx);
 }
 
+// Signup function
 async function signup(ctx) {
   console.log(ctx.request.body.username);
-  // generate salt
+  // Generate salt
   const salt = bcrypt.genSaltSync();
-  // generate hash using password and salt
+  // Generate hash using password and salt
   const hash = bcrypt.hashSync(ctx.request.body.password, salt);
 
-  // create new user document using username and hash
+  // Create new user document using username and hash
   const newUser = new User({
     username: ctx.request.body.username,
     password: hash,
   });
 
-  // save user to database
+  // Save user to database
   const savedUser = await newUser.save().catch((err) => console.log(err));
   console.log(savedUser);
 
-  //If user saved correctly, login user
+  // If user saved correctly, login user
   if (savedUser) {
-    // authenticate user
+    // Authenticate user
     return passport.authenticate("local", (err, user, info, status) => {
-      // if user is valid
+      // If user is valid
       if (user) {
-        // login user
+        // Login user
         ctx.login(user);
-        // redirect to status
         ctx.redirect("/api/auth/status");
       } else {
-        // set status to 400
+        // Return error
         ctx.status = 400;
-        // return error
         ctx.body = { status: "error" };
       }
     })(ctx);
   } else {
-    // if no user returned, return a 400 error (bad request)
+    // If no user returned, return a bad request
     ctx.status = 400;
   }
 }
 
+// Status function
 async function status(ctx) {
-  console.log(ctx.isAuthenticated());
+  // Check whether user is authenticated
   if (ctx.isAuthenticated()) {
     ctx.body = true;
   } else {
     ctx.body = false;
   }
 }
+
+// Logout function
 async function logout(ctx) {
   if (ctx.isAuthenticated()) {
+    // Logout user
     ctx.logout();
     ctx.status = 200;
     ctx.body = "logged out";
   } else {
+    // Throw error
     ctx.body = { success: false };
     ctx.throw(401);
   }
 }
+
+// Export functions
 module.exports = {
   login,
   signup,

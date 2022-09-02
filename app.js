@@ -1,24 +1,26 @@
-const Koa = require("koa"); // Imports Koa
-const Router = require("koa-router"); // Imports Koa-router which allows for routing
-const mongoose = require("mongoose"); // Imports Mongoose which is used to link to MongoDB
-const bodyParser = require("koa-bodyparser"); // Imports Koa-bodyparser which is used to parse requests
+// Imports
+const Koa = require("koa");
+const Router = require("koa-router"); // Import routing
+const bodyParser = require("koa-bodyparser"); // Imports request parser
 const cors = require("@koa/cors");
+const session = require("koa-session"); // Import authentication sessions
+const mongoose = require("mongoose"); // Imports Mongoose which is used to link to MongoDB
+const passport = require("koa-passport");
 
-const session = require("koa-session"); // Imports Koa-session which allows for authentication sessions
-const passport = require("koa-passport"); // Imports Koa-passport which allows passport authentication to work with koa
+// Create a new Koa app
+const app = new Koa();
 
-const app = new Koa(); // Creates new Koa app
-
+// Setup default configuration
 app.use(cors({ credentials: true }));
-
-app.keys = ["super-secret-key"]; // Sets application key (will be secure if used in production)
+app.keys = ["super-secret-key"]; // Sets application key (Make secure for production)
 app.use(session(app)); // Tells app to use sessions
 
-// authentication
+// Setup authentication
 require("./auth"); // Fetches auth file functinos
-app.use(passport.initialize()); // Intialiases passport authentication
+app.use(passport.initialize()); // Intialises passport authentication
 app.use(passport.session()); // Initialises passport sessions
 
+// Connect to database
 mongoose.connect(`mongodb://database:27017/test`, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
@@ -26,15 +28,14 @@ mongoose.connect(`mongodb://database:27017/test`, {
 var db = mongoose.connection; // Stores connection
 db.on("error", console.error.bind(console, "connection error:")); // Logs any errors
 
-app.use(bodyParser()); // Initialises request parser
+// Initialise request parser
+app.use(bodyParser());
 
+// Add routes
 const router = new Router(); // Create new router
-
 require("./routes")(router); // Require external routes and pass in the router
+app.use(router.routes()); // Use all routes
+app.use(router.allowedMethods()); // Setup allowed methods
 
-app.use(router.routes()); // tells router to use all the routes that are on the object
-app.use(router.allowedMethods()); // more setup for router
-
-module.exports = app; // exports application (used for testing)
-
-app.listen(3000); // tell the server to listen to events on port 3000 if in development
+// Listen on port 3000
+app.listen(3000);
